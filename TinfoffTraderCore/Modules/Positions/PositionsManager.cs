@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Tinkoff.Trading.OpenApi.Models;
@@ -56,6 +57,7 @@ namespace TinkoffTraderCore.Modules.Positions
                 // TODO: не хардкодить дату
                 var startDate = new DateTime(2019, 1, 1);
                 var operations = await _context.OperationsAsync(startDate, DateTime.Now, position.Figi);
+                operations.Reverse();
 
                 ProcessOperations(position, operations);
 
@@ -83,18 +85,24 @@ namespace TinkoffTraderCore.Modules.Positions
 
             var averagePrice = position.AveragePrice;
             var averagePriceCorrected = position.AveragePriceCorrected;
+            var totalFixedPnL = position.FixedPnL;
+
+            var availableOperations = new[]
+            {
+                ExtendedOperationType.Buy, ExtendedOperationType.BuyCard, ExtendedOperationType.Sell
+            };
 
             foreach (var operation in operations)
             {
-                if (operation.OperationType != ExtendedOperationType.Buy &&
-                    operation.OperationType != ExtendedOperationType.Sell)
-                    continue;
+                if (!availableOperations.Contains(operation.OperationType)) continue;
+                if (operation.Status != OperationStatus.Done) continue;
 
                 var price = operation.Price;
                 var payment = operation.Payment;
-                var quantity = operation.Quantity;
+                var quantity = operation.Trades.Aggregate(0, (res, trade) => res + trade.Quantity);
                 var commission = operation.Commission?.Value ?? 0;
-                var direction = operation.OperationType == ExtendedOperationType.Buy ? +1 : -1;
+                var direction = operation.OperationType == ExtendedOperationType.Buy || 
+                                operation.OperationType == ExtendedOperationType.BuyCard ? +1 : -1;
 
                 var paymentCorrected = payment + commission;
 
@@ -102,12 +110,17 @@ namespace TinkoffTraderCore.Modules.Positions
                 var sumUpCorrected = (currentQuantity * (averagePriceCorrected ?? 0)) + paymentCorrected;
 
                 var nextQuantity = currentQuantity + direction * quantity;
-                
+
+                decimal? fixedPnL = null;
+
                 // Переход через 0
-                if (nextQuantity * currentQuantity < 0)
+                if (nextQuantity < 0 && currentQuantity > 0 ||
+                    nextQuantity > 0 && currentQuantity < 0)
                 {
                     var partialPayment = currentQuantity * payment / quantity;
                     var partialPaymentCorrected = currentQuantity * paymentCorrected / quantity;
+
+                    fixedPnL = Math.Sign(currentQuantity) * ( -direction * currentQuantity * (averagePriceCorrected ?? 0) + partialPaymentCorrected);
 
                     averagePrice = (payment - partialPayment) / (quantity - currentQuantity);
                     averagePriceCorrected = (paymentCorrected - partialPaymentCorrected) / (quantity - currentQuantity);
@@ -116,7 +129,12 @@ namespace TinkoffTraderCore.Modules.Positions
                 }
                 else
                 {
-                    currentQuantity += direction * quantity;
+                    if (direction * currentQuantity < 0)
+                    {
+                        fixedPnL = -direction * quantity * (averagePriceCorrected ?? 0) + paymentCorrected;
+                    }
+
+                    currentQuantity = nextQuantity;
 
                     if (currentQuantity != 0)
                     {
@@ -130,13 +148,17 @@ namespace TinkoffTraderCore.Modules.Positions
                     }
                 }
 
-                Log.Debug($"{position.Instrument.Ticker}: {direction*quantity}x{price:F2}={payment:F2} --- C:{currentQuantity} --- S:{sumUp:F2} A:{averagePrice:F2} --- S:{sumUpCorrected:F2} A:{averagePriceCorrected:F2}");
+                totalFixedPnL += (fixedPnL ?? 0);
 
+                var message = $"{position.Instrument.Ticker};\t{direction};\t{quantity};\t{price:F2};\t{currentQuantity};\t{sumUp:F2};\t{averagePrice:F2};\t{sumUpCorrected:F2};\t{averagePriceCorrected:F2};\t{fixedPnL:f2}";
+                
+                Log.Debug(message);
             }
 
             position.Quantity = currentQuantity;
             position.AveragePrice = averagePrice;
             position.AveragePriceCorrected = averagePriceCorrected;
+            position.FixedPnL = totalFixedPnL;
         }
     }
 }

@@ -64,7 +64,7 @@ namespace TinkoffTraderCore.Models
         /// <summary>
         /// Зафиксированная прибыль или убыток
         /// </summary>
-        private decimal FixedPnL { get; set; }
+        public decimal FixedPnL { get; set; }
 
         #endregion
     }

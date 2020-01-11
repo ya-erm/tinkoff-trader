@@ -95,8 +95,9 @@ namespace TinkoffTraderCore.Tests
             Assert.AreEqual(-1, position.Quantity);
 
             Assert.AreEqual(120.0, Convert.ToDouble(position.AveragePrice), 0.01);
-        }
 
+            Assert.AreEqual(19.95, Convert.ToDouble(position.FixedPnL), 0.01);
+        }
 
 
         [TestMethod]
@@ -125,6 +126,45 @@ namespace TinkoffTraderCore.Tests
             Assert.AreEqual(1, position.Quantity);
 
             Assert.AreEqual(-100.0, Convert.ToDouble(position.AveragePrice), 0.01);
+
+            Assert.AreEqual(19.95, Convert.ToDouble(position.FixedPnL), 0.01);
+        }
+
+
+        [TestMethod]
+        public void Test4_PositionsProcess_FixedPnL()
+        {
+            var instrument = new MarketInstrument(@"", @"GAZP", "", 0.01M, 1, Currency.Rub, "");
+
+            var position = new Position(instrument, 0);
+
+            var operations = new List<Operation>
+            {
+                CreateOperation(instrument, 100, +2),
+                CreateOperation(instrument, 120, -1),
+            };
+
+            PositionsManager.ProcessOperations(position, operations);
+            
+            Assert.AreEqual(19.95, Convert.ToDouble(position.FixedPnL), 0.01);
+        }
+
+        [TestMethod]
+        public void Test4_PositionsProcess_FixedPnL_Short()
+        {
+            var instrument = new MarketInstrument(@"", @"GAZP", "", 0.01M, 1, Currency.Rub, "");
+
+            var position = new Position(instrument, 0);
+
+            var operations = new List<Operation>
+            {
+                CreateOperation(instrument, 120, -1),
+                CreateOperation(instrument, 100, +1),
+            };
+
+            PositionsManager.ProcessOperations(position, operations);
+
+            Assert.AreEqual(19.95, Convert.ToDouble(position.FixedPnL), 0.01);
         }
     }
 }

@@ -41,7 +41,7 @@ namespace TinkoffTraderCore.Modules.Instruments
 
             var response = await _context.MarketSearchByFigiAsync(figi);
 
-            instrument = response.Instruments.FirstOrDefault();
+            instrument = response.Instruments?.FirstOrDefault();
 
             _instruments[figi] = instrument;
 
