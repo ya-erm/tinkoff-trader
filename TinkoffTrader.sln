@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinkoffTrader", "TinkoffTra
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinkoffTraderCore", "TinfoffTraderCore\TinkoffTraderCore.csproj", "{2CE60DA7-013A-4163-B928-427D85A900EE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinkoffTraderConsole", "TinkoffTraderConsole\TinkoffTraderConsole.csproj", "{FC0E03B8-D465-49AB-9A57-B0B9B37572A9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tinkoff.Trading.OpenApi", "invest-openapi-csharp-sdk-master\src\Tinkoff.Trading.OpenApi\Tinkoff.Trading.OpenApi.csproj", "{4225A47E-9AD8-4CA2-A410-228A687AE22E}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinkoffTraderCore.Tests", "TinkoffTraderCore.Tests\TinkoffTraderCore.Tests.csproj", "{F70D1563-884A-4832-B824-5B84E49AD3CF}"
 EndProject
 Global
@@ -23,6 +27,14 @@ Global
 		{2CE60DA7-013A-4163-B928-427D85A900EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CE60DA7-013A-4163-B928-427D85A900EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CE60DA7-013A-4163-B928-427D85A900EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC0E03B8-D465-49AB-9A57-B0B9B37572A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC0E03B8-D465-49AB-9A57-B0B9B37572A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC0E03B8-D465-49AB-9A57-B0B9B37572A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC0E03B8-D465-49AB-9A57-B0B9B37572A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4225A47E-9AD8-4CA2-A410-228A687AE22E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4225A47E-9AD8-4CA2-A410-228A687AE22E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4225A47E-9AD8-4CA2-A410-228A687AE22E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4225A47E-9AD8-4CA2-A410-228A687AE22E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F70D1563-884A-4832-B824-5B84E49AD3CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F70D1563-884A-4832-B824-5B84E49AD3CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F70D1563-884A-4832-B824-5B84E49AD3CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
