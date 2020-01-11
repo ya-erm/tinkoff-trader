@@ -11,6 +11,9 @@ namespace Tinkoff.Trading.OpenApi.Models
         BrokerCommission,
         ExchangeCommission,
         ServiceCommission,
-        MarginCommission
+        MarginCommission,
+        TaxDividend,
+        Dividend,
+        BuyCard,
     }
 }
