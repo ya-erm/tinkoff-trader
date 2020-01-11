@@ -5,6 +5,8 @@ using TinkoffTraderCore;
 namespace TinkoffTrader.ViewModels
 {
     internal class MainViewModel : ABaseViewModel
+    {
+        public LoginViewModel LoginViewModel { get; } = new LoginViewModel();
 
         /// <summary>
         /// True, если включен режим песочницы
@@ -30,6 +32,9 @@ namespace TinkoffTrader.ViewModels
 
         private async void StartAction()
         {
+            var trader = new Trader(LoginViewModel.Token, IsSandboxMode);
+
+            await trader.Main();
         }
     }
 }
