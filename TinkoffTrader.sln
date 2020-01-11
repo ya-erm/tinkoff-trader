@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinkoffTrader", "TinkoffTra
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinkoffTraderCore", "TinfoffTraderCore\TinkoffTraderCore.csproj", "{2CE60DA7-013A-4163-B928-427D85A900EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinkoffTraderCore.Tests", "TinkoffTraderCore.Tests\TinkoffTraderCore.Tests.csproj", "{F70D1563-884A-4832-B824-5B84E49AD3CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,11 @@ Global
 		{2CE60DA7-013A-4163-B928-427D85A900EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2CE60DA7-013A-4163-B928-427D85A900EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CE60DA7-013A-4163-B928-427D85A900EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CE60DA7-013A-4163-B928-427D85A900EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F70D1563-884A-4832-B824-5B84E49AD3CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F70D1563-884A-4832-B824-5B84E49AD3CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F70D1563-884A-4832-B824-5B84E49AD3CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F70D1563-884A-4832-B824-5B84E49AD3CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
