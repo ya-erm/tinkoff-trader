@@ -19,5 +19,18 @@ namespace TinkoffTraderCore
         }
 
         #endregion
+
+        public async Task Main()
+        {
+            var context = _useSandbox
+                ? ConnectionFactory.GetSandboxConnection(_token).Context
+                : ConnectionFactory.GetConnection(_token).Context;
+
+            var instrumentsManager = new InstrumentsManager(context);
+            await instrumentsManager.InitializeAsync();
+
+            var positionsManager = new PositionsManager(context, instrumentsManager);
+            await positionsManager.LoadPositionsAsync();
+        }
     }
 }
