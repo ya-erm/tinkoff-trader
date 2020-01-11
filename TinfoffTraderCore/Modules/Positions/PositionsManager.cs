@@ -44,7 +44,7 @@ namespace TinkoffTraderCore.Modules.Positions
                 var position = new Position(instrument, 0);
 
                 // TODO: не хардкодить дату
-                var startDate = new DateTime(2019, 0, 0);
+                var startDate = new DateTime(2019, 1, 1);
                 var operations = await _context.OperationsAsync(startDate, DateTime.Now, position.Figi);
 
                 ProcessOperations(position, operations);
@@ -86,22 +86,36 @@ namespace TinkoffTraderCore.Modules.Positions
                 var commission = operation.Commission?.Value ?? 0;
                 var direction = operation.OperationType == ExtendedOperationType.Buy ? +1 : -1;
 
-                var paymentCorrected = payment - commission;
+                var paymentCorrected = payment + commission;
 
                 var sumUp = (currentQuantity * (averagePrice ?? 0)) + payment;
                 var sumUpCorrected = (currentQuantity * (averagePriceCorrected ?? 0)) + paymentCorrected;
 
-                currentQuantity += direction * quantity;
-
-                if (currentQuantity != 0)
+                var nextQuantity = currentQuantity + direction * quantity;
+                
+                // Переход через 0
+                if (nextQuantity * currentQuantity < 0)
                 {
-                    averagePrice = sumUp / currentQuantity;
-                    averagePriceCorrected = sumUpCorrected / currentQuantity;
+                    var partialPayment = currentQuantity * payment / quantity;
+                    var partialPaymentCorrected = currentQuantity * paymentCorrected / quantity;
+
+                    averagePrice = (payment - partialPayment) / (quantity - currentQuantity);
+                    averagePriceCorrected = (paymentCorrected - partialPaymentCorrected) / (quantity - currentQuantity);
                 }
                 else
                 {
-                    averagePrice = null;
-                    averagePriceCorrected = null;
+                    currentQuantity += direction * quantity;
+
+                    if (currentQuantity != 0)
+                    {
+                        averagePrice = sumUp / currentQuantity;
+                        averagePriceCorrected = sumUpCorrected / currentQuantity;
+                    }
+                    else
+                    {
+                        averagePrice = null;
+                        averagePriceCorrected = null;
+                    }
                 }
 
             }

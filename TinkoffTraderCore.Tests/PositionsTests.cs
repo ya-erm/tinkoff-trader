@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
@@ -13,11 +13,11 @@ namespace TinkoffTraderCore.Tests
     public class PositionsTests
     {
         /// <summary>
-        /// Создать операцию
+        /// РЎРѕР·РґР°С‚СЊ РѕРїРµСЂР°С†РёСЋ
         /// </summary>
-        /// <param name="instrument">Инструмент</param>
-        /// <param name="price">Цена одного инструмента</param>
-        /// <param name="quantity">Количество (для покупки - отрицательное число, для продажи - положительное)</param>
+        /// <param name="instrument">РРЅСЃС‚СЂСѓРјРµРЅС‚</param>
+        /// <param name="price">Р¦РµРЅР° РѕРґРЅРѕРіРѕ РёРЅСЃС‚СЂСѓРјРµРЅС‚Р°</param>
+        /// <param name="quantity">РљРѕР»РёС‡РµСЃС‚РІРѕ (РґР»СЏ РїРѕРєСѓРїРєРё - РїРѕР»РѕР¶РёС‚РµР»СЊРЅРѕРµ С‡РёСЃР»Рѕ, РґР»СЏ РїСЂРѕРґР°Р¶Рё - РѕС‚СЂРёС†Р°С‚РµР»СЊРЅРѕРµ)</param>
         /// <returns></returns>
         private Operation CreateOperation(MarketInstrument instrument, decimal price, int quantity)
         {
@@ -25,16 +25,16 @@ namespace TinkoffTraderCore.Tests
             ("1",
                 OperationStatus.Done,
                 null,
-                new MoneyAmount(instrument.Currency,  Math.Round(price * Math.Abs(quantity) * 0.00025M, 2)),
+                new MoneyAmount(instrument.Currency, Math.Round(-Math.Abs(quantity) * price * 0.00025M, 2)),
                 instrument.Currency,
-                price * quantity,
+                -quantity * price,
                 price,
                 Math.Abs(quantity),
                 instrument.Figi,
                 InstrumentType.Stock,
                 false,
                 DateTime.Now,
-                quantity < 0 ? ExtendedOperationType.Buy : ExtendedOperationType.Sell
+                quantity > 0 ? ExtendedOperationType.Buy : ExtendedOperationType.Sell
             );
         }
 
@@ -47,9 +47,9 @@ namespace TinkoffTraderCore.Tests
 
             var operations = new List<Operation>
             {
-                CreateOperation(instrument, 478.82M, -1),
-                CreateOperation(instrument, 476.70M, -1),
-                CreateOperation(instrument, 475.58M, -1),
+                CreateOperation(instrument, 478.82M, +1),
+                CreateOperation(instrument, 476.70M, +1),
+                CreateOperation(instrument, 475.58M, +1),
             };
 
             PositionsManager.ProcessOperations(position, operations);
@@ -59,14 +59,72 @@ namespace TinkoffTraderCore.Tests
 
             operations = new List<Operation>
             {
-                CreateOperation(instrument, 477.50M, +2),
-                CreateOperation(instrument, 478.65M, +1),
+                CreateOperation(instrument, 477.50M, -2),
+                CreateOperation(instrument, 478.65M, -1),
             };
 
             PositionsManager.ProcessOperations(position, operations);
 
             Assert.AreEqual(0, position.Quantity);
+        }
 
+
+        [TestMethod]
+        public void Test2_PositionsProcess_OverZero()
+        {
+            var instrument = new MarketInstrument(@"", @"GAZP", "", 0.01M, 1, Currency.Rub, "");
+
+            var position = new Position(instrument, 0);
+
+            var operations = new List<Operation>
+            {
+                CreateOperation(instrument, 100, +1),
+            };
+
+            PositionsManager.ProcessOperations(position, operations);
+
+            Assert.AreEqual(1, position.Quantity);
+
+            operations = new List<Operation>
+            {
+                CreateOperation(instrument, 120, -2),
+            };
+
+            PositionsManager.ProcessOperations(position, operations);
+
+            Assert.AreEqual(-1, position.Quantity);
+
+            Assert.AreEqual(120.0, Convert.ToDouble(position.AveragePrice), 0.01);
+        }
+
+
+
+        [TestMethod]
+        public void Test3_PositionsProcess_OverZero_Short()
+        {
+            var instrument = new MarketInstrument(@"", @"GAZP", "", 0.01M, 1, Currency.Rub, "");
+
+            var position = new Position(instrument, 0);
+
+            var operations = new List<Operation>
+            {
+                CreateOperation(instrument, 120, -1),
+            };
+
+            PositionsManager.ProcessOperations(position, operations);
+
+            Assert.AreEqual(-1, position.Quantity);
+
+            operations = new List<Operation>
+            {
+                CreateOperation(instrument, 100, 2),
+            };
+
+            PositionsManager.ProcessOperations(position, operations);
+
+            Assert.AreEqual(1, position.Quantity);
+
+            Assert.AreEqual(-100.0, Convert.ToDouble(position.AveragePrice), 0.01);
         }
     }
 }
