@@ -1,6 +1,7 @@
-﻿using System.Threading.Tasks;
-using System.Windows.Input;
+﻿using System.Windows.Input;
+using TinkoffTrader.Utils;
 using TinkoffTraderCore;
+using TinkoffTraderCore.Modules.Positions;
 
 namespace TinkoffTrader.ViewModels
 {
@@ -33,6 +34,8 @@ namespace TinkoffTrader.ViewModels
         private async void StartAction()
         {
             var trader = new Trader(LoginViewModel.Token, IsSandboxMode);
+
+            PositionsManager.Log = new PrintLogger(WriteLine);
 
             await trader.Main();
         }

@@ -7,6 +7,7 @@ using Tinkoff.Trading.OpenApi.Models;
 using Tinkoff.Trading.OpenApi.Network;
 using TinkoffTraderCore.Models;
 using TinkoffTraderCore.Modules.Instruments;
+using TinkoffTraderCore.Utils;
 
 [assembly: InternalsVisibleTo("TinkoffTraderCore.Tests")]
 namespace TinkoffTraderCore.Modules.Positions
@@ -18,6 +19,8 @@ namespace TinkoffTraderCore.Modules.Positions
     {
         private readonly IContext _context;
         private readonly IInstrumentsManager _instrumentsManager;
+
+        public static ILogger Log { get; set; } = ConsoleLogger.Default;
 
         #region .ctor
 
@@ -41,6 +44,13 @@ namespace TinkoffTraderCore.Modules.Positions
             {
                 var instrument = await _instrumentsManager.GetInstrumentAsync(pos.Figi);
 
+                if (instrument == null)
+                {
+                    Log.Error($"Не удалось найти инструмент по идентификатору: {pos.Figi}");
+
+                    continue;
+                }
+
                 var position = new Position(instrument, 0);
 
                 // TODO: не хардкодить дату
@@ -51,7 +61,7 @@ namespace TinkoffTraderCore.Modules.Positions
 
                 if (position.LotsCount != pos.Lots)
                 {
-                    throw new Exception($"Рассчитанная позиция {instrument.Ticker}, равная {position.LotsCount} шт., не совпадает с актуальной: {pos.Lots} шт.");
+                    Log.Error($"Рассчитанная позиция {instrument.Ticker}: {position.LotsCount} шт., не совпадает с актуальной: {pos.Lots} шт.");
                 }
 
                 // TODO: Сохранить позицию в БД
@@ -101,6 +111,8 @@ namespace TinkoffTraderCore.Modules.Positions
 
                     averagePrice = (payment - partialPayment) / (quantity - currentQuantity);
                     averagePriceCorrected = (paymentCorrected - partialPaymentCorrected) / (quantity - currentQuantity);
+
+                    currentQuantity = nextQuantity;
                 }
                 else
                 {
@@ -117,6 +129,8 @@ namespace TinkoffTraderCore.Modules.Positions
                         averagePriceCorrected = null;
                     }
                 }
+
+                Log.Debug($"{position.Instrument.Ticker}: {direction*quantity}x{price:F2}={payment:F2} --- C:{currentQuantity} --- S:{sumUp:F2} A:{averagePrice:F2} --- S:{sumUpCorrected:F2} A:{averagePriceCorrected:F2}");
 
             }
 

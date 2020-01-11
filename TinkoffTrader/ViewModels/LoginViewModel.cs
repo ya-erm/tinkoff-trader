@@ -3,6 +3,7 @@ using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Input;
 using TinkoffTraderCore;
+using TinkoffTraderCore.Modules;
 
 namespace TinkoffTrader.ViewModels
 {

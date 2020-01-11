@@ -1,7 +1,8 @@
 ﻿using System.IO;
 using System.Linq;
+using TinkoffTraderCore.Utils;
 
-namespace TinkoffTraderCore
+namespace TinkoffTraderCore.Modules
 {
     public class TokenStorage
     {
