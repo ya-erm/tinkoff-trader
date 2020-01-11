@@ -4,4 +4,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+
+  <ItemGroup>
+    <ProjectReference Include="..\invest-openapi-csharp-sdk-master\src\Tinkoff.Trading.OpenApi\Tinkoff.Trading.OpenApi.csproj" />
+  </ItemGroup>
+
 </Project>
