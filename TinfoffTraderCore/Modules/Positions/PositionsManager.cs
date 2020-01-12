@@ -98,16 +98,16 @@ namespace TinkoffTraderCore.Modules.Positions
                 if (operation.Status != OperationStatus.Done) continue;
 
                 var price = operation.Price;
-                var payment = operation.Payment;
+                var cost = -operation.Payment;
                 var quantity = operation.Trades.Aggregate(0, (res, trade) => res + trade.Quantity);
-                var commission = operation.Commission?.Value ?? 0;
+                var commission = Math.Abs(operation.Commission?.Value ?? 0);
                 var direction = operation.OperationType == ExtendedOperationType.Buy || 
                                 operation.OperationType == ExtendedOperationType.BuyCard ? +1 : -1;
 
-                var paymentCorrected = payment + commission;
+                var costCorrected = cost + commission;
 
-                var sumUp = (currentQuantity * (averagePrice ?? 0)) + payment;
-                var sumUpCorrected = (currentQuantity * (averagePriceCorrected ?? 0)) + paymentCorrected;
+                var sumUp = currentQuantity * (averagePrice ?? 0) + cost;
+                var sumUpCorrected = currentQuantity * (averagePriceCorrected ?? 0) + costCorrected;
 
                 var nextQuantity = currentQuantity + direction * quantity;
 
@@ -117,13 +117,14 @@ namespace TinkoffTraderCore.Modules.Positions
                 if (nextQuantity < 0 && currentQuantity > 0 ||
                     nextQuantity > 0 && currentQuantity < 0)
                 {
-                    var partialPayment = currentQuantity * payment / quantity;
-                    var partialPaymentCorrected = currentQuantity * paymentCorrected / quantity;
+                    var proportion = Math.Abs(currentQuantity / (decimal)quantity);
 
-                    fixedPnL = Math.Sign(currentQuantity) * ( -direction * currentQuantity * (averagePriceCorrected ?? 0) + partialPaymentCorrected);
+                    var partialCostCorrected = costCorrected * proportion;
 
-                    averagePrice = (payment - partialPayment) / (quantity - currentQuantity);
-                    averagePriceCorrected = (paymentCorrected - partialPaymentCorrected) / (quantity - currentQuantity);
+                    fixedPnL = Math.Sign(currentQuantity) * direction * (currentQuantity * (averagePriceCorrected ?? 0) + partialCostCorrected);
+
+                    averagePrice = price;
+                    averagePriceCorrected = price - commission * (1 - proportion);
 
                     currentQuantity = nextQuantity;
                 }
@@ -131,15 +132,15 @@ namespace TinkoffTraderCore.Modules.Positions
                 {
                     if (direction * currentQuantity < 0)
                     {
-                        fixedPnL = -direction * quantity * (averagePriceCorrected ?? 0) + paymentCorrected;
+                        fixedPnL = direction * quantity * (averagePriceCorrected ?? 0) - costCorrected;
                     }
 
                     currentQuantity = nextQuantity;
 
                     if (currentQuantity != 0)
                     {
-                        averagePrice = sumUp / currentQuantity;
-                        averagePriceCorrected = sumUpCorrected / currentQuantity;
+                        averagePrice = Math.Abs(sumUp / currentQuantity);
+                        averagePriceCorrected = Math.Abs(sumUpCorrected / currentQuantity);
                     }
                     else
                     {
@@ -150,7 +151,8 @@ namespace TinkoffTraderCore.Modules.Positions
 
                 totalFixedPnL += (fixedPnL ?? 0);
 
-                var message = $"{position.Instrument.Ticker};\t{direction};\t{quantity};\t{price:F2};\t{currentQuantity};\t{sumUp:F2};\t{averagePrice:F2};\t{sumUpCorrected:F2};\t{averagePriceCorrected:F2};\t{fixedPnL:f2}";
+                var plus = direction > 0 ? "+" : "";
+                var message = $"{position.Instrument.Ticker};\t{operation.Date:G};\t{price:F2};\t{plus}{direction*quantity};\t{plus}{cost:F2};\t{currentQuantity};\t{sumUp:F2};\t{averagePrice:F2};\t{sumUpCorrected:F2};\t{averagePriceCorrected:F2};\t{fixedPnL:f2}";
                 
                 Log.Debug(message);
             }
