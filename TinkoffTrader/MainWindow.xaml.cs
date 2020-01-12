@@ -9,10 +9,13 @@ namespace TinkoffTrader
     /// </summary>
     public partial class MainWindow : Window
     {
+        private  MainViewModel ViewModel { get; set; } = new MainViewModel();
 
         public MainWindow()
         {
             InitializeComponent();
+
+            DataContext = ViewModel;
         }
     }
 }

@@ -4,8 +4,25 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TinkoffTrader"
+        xmlns:views="clr-namespace:TinkoffTrader.Views"
+        xmlns:viewModels="clr-namespace:TinkoffTrader.ViewModels"
+        d:DataContext="{d:DesignInstance Type=viewModels:MainViewModel}"
         Title="Tinkoff Trader" Height="450" Width="800"
         mc:Ignorable="d">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <views:LoginComponent Grid.Row="0" DataContext="{Binding Path=LoginViewModel}"/>
+
+        <CheckBox Grid.Row="1" IsChecked="{Binding Path=IsSandboxMode}" Content="Режим песочницы" Margin="5"/>
+
+        <TextBox Grid.Row="2" IsReadOnly="True" Text="{Binding Path=Output}" Margin="5" VerticalScrollBarVisibility="Auto"/>
+
+        <Button Grid.Row="3" Content="Поехали" Margin="5" Command="{Binding Path=Start}"/>
     </Grid>
 </Window>

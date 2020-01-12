@@ -1,0 +1,72 @@
+﻿<UserControl x:Class="TinkoffTrader.Views.LoginComponent"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TinkoffTrader.Views"
+             xmlns:viewModels="clr-namespace:TinkoffTrader.ViewModels"
+             xmlns:converters="clr-namespace:TinkoffTrader.Converters"
+             d:DataContext="{d:DesignInstance Type=viewModels:LoginViewModel}"
+             d:DesignWidth="300"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <converters:VisibilityConverter x:Key="VisibilityConverter"/>
+        <Style TargetType="Grid">
+            <Setter Property="Margin" Value="0 0 0 5"/>
+        </Style>
+    </UserControl.Resources>
+    <Grid Margin="5 5 5 0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0"
+              Visibility="{Binding Path=ShowInfo, Converter={StaticResource VisibilityConverter}}">
+            <TextBlock Text="{Binding Path=Info}" />
+        </Grid>
+
+        <Grid Grid.Row="1"
+              Visibility="{Binding Path=ShowToken, Converter={StaticResource VisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="Токен: "/>
+            <TextBox Grid.Column="1" Text="{Binding Path=Token}"/>
+        </Grid>
+
+        <Grid Grid.Row="2"
+              Visibility="{Binding Path=ShowButton, Converter={StaticResource VisibilityConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Пароль: "/>
+            <PasswordBox Grid.Row="0"  Name="PasswordBox" Grid.Column="1"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Foreground="DarkOrange"
+                       Visibility="{Binding Path=ShowTips, Converter={StaticResource VisibilityConverter}}">
+                Если не задать пароль для шифрования, то токен авторизации будет сохранён в открытом виде
+            </TextBlock>
+        </Grid>
+
+        <Grid Grid.Row="3"
+              Visibility="{Binding Path=ShowError, Converter={StaticResource VisibilityConverter}}">
+            <TextBlock Text="{Binding Path=Error}" Foreground="Red"/>
+        </Grid>
+
+        <Button Grid.Row="4"
+                Visibility="{Binding Path=ShowButton, Converter={StaticResource VisibilityConverter}}"
+                Command="{Binding Path=Command}" CommandParameter="{Binding ElementName=PasswordBox}">
+            <TextBlock Text="{Binding Path=CommandText}"/>
+        </Button>
+
+    </Grid>
+</UserControl>
