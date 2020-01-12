@@ -43,27 +43,16 @@ namespace TinkoffTraderCore.Modules.Positions
 
             foreach (var pos in portfolio.Positions)
             {
-                var instrument = await _instrumentsManager.GetInstrumentAsync(pos.Figi);
+                var position = await CalculatePositionAsync(pos.Figi);
 
-                if (instrument == null)
+                if (position == null)
                 {
-                    Log.Error($"Не удалось найти инструмент по идентификатору: {pos.Figi}");
-
                     continue;
                 }
 
-                var position = new Position(instrument, 0);
-
-                // TODO: не хардкодить дату
-                var startDate = new DateTime(2019, 1, 1);
-                var operations = await _context.OperationsAsync(startDate, DateTime.Now, position.Figi);
-                operations.Reverse();
-
-                ProcessOperations(position, operations);
-
                 if (position.LotsCount != pos.Lots)
                 {
-                    Log.Error($"Рассчитанная позиция {instrument.Ticker}: {position.LotsCount} шт., не совпадает с актуальной: {pos.Lots} шт.");
+                    Log.Error($"Рассчитанная позиция {position.Instrument.Ticker}: {position.LotsCount} шт., не совпадает с актуальной: {pos.Lots} шт.");
                 }
 
                 // TODO: Сохранить позицию в БД
@@ -74,7 +63,42 @@ namespace TinkoffTraderCore.Modules.Positions
 
         #endregion
 
-        /// <summary>
+
+        public async Task<Position> CalculatePositionByTickerAsync(string ticker)
+        {
+            var instrument = await _instrumentsManager.GetInstrumentByTickerAsync(ticker);
+
+            return await CalculatePositionAsync(instrument.Figi);
+        }
+
+        public async Task<Position> CalculatePositionAsync(string figi)
+        {
+            var instrument = await _instrumentsManager.GetInstrumentAsync(figi);
+
+            if (instrument == null)
+            {
+                Log.Error($"Не удалось найти инструмент по идентификатору: {figi}");
+
+                return null;
+            }
+
+            var position = new Position(instrument, 0);
+
+            // TODO: не хардкодить дату
+            var startDate = new DateTime(2019, 1, 1);
+            var operations = await _context.OperationsAsync(startDate, DateTime.Now, position.Figi);
+            operations.Reverse();
+
+            ProcessOperations(position, operations);
+
+            var currency = position.Instrument.Currency == Currency.Rub ? "₽" : "$";
+
+            Log.Info($"Рассчитанная прибыль c {position.Instrument.Ticker}: {position.FixedPnL:F2} {currency}, позиция: {position.Quantity} шт.");
+
+            return position;
+        }
+
+            /// <summary>
         /// Рассчитать позицию на основе новых сделок
         /// </summary>
         /// <param name="position">Позиция с её текущим состоянием</param>

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Threading.Tasks;
 using Tinkoff.Trading.OpenApi.Models;
@@ -39,11 +40,38 @@ namespace TinkoffTraderCore.Modules.Instruments
                 return instrument;
             }
 
-            var response = await _context.MarketSearchByFigiAsync(figi);
+            instrument = await _context.MarketSearchByFigiAsync(figi);
+
+            if (instrument != null)
+            {
+                _instruments[figi] = instrument;
+            }
+
+            return instrument;
+        }
+
+        /// <summary>
+        /// Получить инструмент по его аббревиатуре
+        /// </summary>
+        /// <param name="ticker">Аббревиатура инструмента</param>
+        /// <returns></returns>
+        public async Task<MarketInstrument> GetInstrumentByTickerAsync(string ticker)
+        {
+            var instrument = _instruments.Values.FirstOrDefault(_ => _.Ticker == ticker);
+            
+            if (instrument != null)
+            {
+                return instrument;
+            }
+
+            var response = await _context.MarketSearchByTickerAsync(ticker);
 
             instrument = response.Instruments?.FirstOrDefault();
 
-            _instruments[figi] = instrument;
+            if (instrument != null)
+            {
+                _instruments[instrument.Figi] = instrument;
+            }
 
             return instrument;
         }
@@ -56,12 +84,27 @@ namespace TinkoffTraderCore.Modules.Instruments
         /// <returns></returns>
         public async Task InitializeAsync()
         {
-            var response = await _context.MarketStocksAsync();
+            var stocks = await _context.MarketStocksAsync();
 
-            foreach(var instrument in response.Instruments)
+            foreach(var instrument in stocks.Instruments)
             {
                 _instruments[instrument.Figi] = instrument;
             }
+
+            var funds = await _context.MarketEtfsAsync();
+
+            foreach (var instrument in funds.Instruments)
+            {
+                _instruments[instrument.Figi] = instrument;
+            }
+
+            var bonds = await _context.MarketBondsAsync();
+
+            foreach (var instrument in bonds.Instruments)
+            {
+                _instruments[instrument.Figi] = instrument;
+            }
+
         }
 
     }
