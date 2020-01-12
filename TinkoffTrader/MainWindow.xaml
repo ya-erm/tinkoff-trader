@@ -15,14 +15,26 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <views:LoginComponent Grid.Row="0" DataContext="{Binding Path=LoginViewModel}"/>
 
         <CheckBox Grid.Row="1" IsChecked="{Binding Path=IsSandboxMode}" Content="Режим песочницы" Margin="5"/>
 
-        <TextBox Grid.Row="2" IsReadOnly="True" Text="{Binding Path=Output}" Margin="5" VerticalScrollBarVisibility="Auto"/>
+        <TextBox Grid.Row="2" IsReadOnly="True" Text="{Binding Path=Output}" Margin="5" VerticalScrollBarVisibility="Auto" FontFamily="Consolas"/>
 
-        <Button Grid.Row="3" Content="Поехали" Margin="5" Command="{Binding Path=Start}"/>
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Инструмент:" Margin="5" VerticalAlignment="Center"/>
+            <TextBox Grid.Column="1" Text="{Binding Path=Instrument}" Margin="0 5" />
+            <Button Grid.Column="2" Content="Рассчитать позицию"  Margin="5"  Padding="5 2" Command="{Binding Path=CalculatePosition}"/>
+        </Grid>
+
+        <Button Grid.Row="4" Content="Поехали" Margin="5" Command="{Binding Path=Start}"/>
     </Grid>
 </Window>
