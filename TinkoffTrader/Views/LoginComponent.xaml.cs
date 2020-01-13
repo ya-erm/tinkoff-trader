@@ -1,4 +1,6 @@
 ﻿using System.Windows.Controls;
+using System.Windows.Input;
+using TinkoffTrader.ViewModels;
 
 namespace TinkoffTrader.Views
 {
@@ -7,6 +9,14 @@ namespace TinkoffTrader.Views
         public LoginComponent()
         {
             InitializeComponent();
+        }
+
+        private void LoginComponent_OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                (DataContext as LoginViewModel)?.Command.Execute(PasswordBox);
+            }
         }
     }
 }
