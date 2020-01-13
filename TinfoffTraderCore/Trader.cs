@@ -9,16 +9,21 @@ namespace TinkoffTraderCore
 {
     public class Trader
     {
-        private readonly string _token;
-        private readonly bool _useSandbox;
+        private string _token;
+        private bool _useSandbox;
 
-        public InstrumentsManager InstrumentsManager { get; }
+        public InstrumentsManager InstrumentsManager { get; private set; }
 
-        public PositionsManager PositionsManager { get; }
+        public PositionsManager PositionsManager { get; private set; }
 
         #region .ctor
 
-        public Trader(string token, bool useSandbox)
+        public Trader()
+        {
+
+        }
+
+        public void Initialize(string token, bool useSandbox)
         {
             _token = token;
             _useSandbox = useSandbox;

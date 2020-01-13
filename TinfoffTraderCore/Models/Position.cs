@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Tinkoff.Trading.OpenApi.Models;
 
@@ -65,6 +66,11 @@ namespace TinkoffTraderCore.Models
         /// Зафиксированная прибыль или убыток
         /// </summary>
         public decimal FixedPnL { get; set; }
+
+        /// <summary>
+        /// Список сделок по данной позиции
+        /// </summary>
+        public List<PositionFill> Fills { get; set; } = new List<PositionFill>();
 
         #endregion
     }

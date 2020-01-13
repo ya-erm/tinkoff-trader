@@ -187,8 +187,25 @@ namespace TinkoffTraderCore.Modules.Positions
 
                 totalFixedPnL += (fixedPnL ?? 0);
 
+                var positionFill = new PositionFill()
+                {
+                    Figi = position.Instrument?.Figi,
+                    Date = operation.Date,
+                    Price = price,
+                    Count = direction * quantity,
+                    Commission = operation.Commission?.Value ?? 0,
+                    CurrentCount = currentQuantity,
+                    SumUp = sumUp,
+                    AveragePrice = averagePrice,
+                    SumUpCorrected = sumUpCorrected,
+                    AveragePriceCorrected = averagePriceCorrected,
+                    FixedPnL = fixedPnL,
+                };
+
+                position.Fills.Add(positionFill);
+
                 var plus = direction > 0 ? "+" : "";
-                var message = $"{position.Instrument.Ticker};\t{operation.Date:G};\t{price:F2};\t{plus}{direction*quantity};\t{plus}{cost:F2};\t{currentQuantity};\t{sumUp:F2};\t{averagePrice:F2};\t{sumUpCorrected:F2};\t{averagePriceCorrected:F2};\t{fixedPnL:f2}";
+                var message = $"{position.Instrument?.Ticker};\t{operation.Date:G};\t{price:F2};\t{plus}{direction*quantity};\t{plus}{cost:F2};\t{currentQuantity};\t{sumUp:F2};\t{averagePrice:F2};\t{sumUpCorrected:F2};\t{averagePriceCorrected:F2};\t{fixedPnL:f2}";
                 
                 Log.Debug(message);
             }
@@ -197,6 +214,7 @@ namespace TinkoffTraderCore.Modules.Positions
             position.AveragePrice = averagePrice;
             position.AveragePriceCorrected = averagePriceCorrected;
             position.FixedPnL = totalFixedPnL;
+            position.LastUpdateTime = operations.LastOrDefault()?.Date ?? DateTime.Now;
         }
     }
 }

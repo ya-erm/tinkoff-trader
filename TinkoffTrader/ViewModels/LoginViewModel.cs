@@ -66,6 +66,11 @@ namespace TinkoffTrader.ViewModels
         [DependsOn(nameof(TokenLoaded))] 
         public bool ShowButton => !TokenLoaded;
 
+        /// <summary>
+        /// Событие загрузки токена
+        /// </summary>
+        public event EventHandler<string> OnTokenLoaded; 
+
         #region .ctor
 
         public LoginViewModel()
@@ -84,6 +89,7 @@ namespace TinkoffTrader.ViewModels
                 {
                     Token = TokenStorage.LoadToken();
                     TokenLoaded = true;
+                    OnTokenLoaded?.Invoke(this, Token);
                 }
             }
             else
@@ -137,6 +143,7 @@ namespace TinkoffTrader.ViewModels
             passwordBox.Clear();
 
             TokenLoaded = true;
+            OnTokenLoaded?.Invoke(this, Token);
             ShowInfoTemporary("Токен успешно загружен");
         }
         

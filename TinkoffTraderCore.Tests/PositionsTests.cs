@@ -167,41 +167,41 @@ namespace TinkoffTraderCore.Tests
         }
 
 
-        [TestMethod]
-        public void Test5_PositionsProcess()
-        {
-            var instrument = new MarketInstrument(@"", @"GAZP", "", 0.01M, 1, Currency.Rub, "");
+        //[TestMethod]
+        //public void Test5_PositionsProcess()
+        //{
+        //    var instrument = new MarketInstrument(@"", @"GAZP", "", 0.01M, 1, Currency.Rub, "");
 
-            var position = new Position(instrument, 0);
+        //    var position = new Position(instrument, 0);
 
-            var operations = new List<Operation>
-            {
-                CreateOperation(instrument, 220.49M, +10),
-                CreateOperation(instrument, 260.37M, -20),
-            };
+        //    var operations = new List<Operation>
+        //    {
+        //        CreateOperation(instrument, 220.49M, +10),
+        //        CreateOperation(instrument, 260.37M, -20),
+        //    };
 
-            PositionsManager.ProcessOperations(position, operations);
+        //    PositionsManager.ProcessOperations(position, operations);
 
-            Assert.AreEqual(260.37, Convert.ToDouble(position.AveragePrice), 0.01);
+        //    Assert.AreEqual(260.37, Convert.ToDouble(position.AveragePrice), 0.01);
 
-            operations = new List<Operation>
-            {
-                CreateOperation(instrument, 260.95M, -20),
-            };
+        //    operations = new List<Operation>
+        //    {
+        //        CreateOperation(instrument, 260.95M, -20),
+        //    };
 
-             PositionsManager.ProcessOperations(position, operations);
+        //     PositionsManager.ProcessOperations(position, operations);
 
-             Assert.AreEqual(260.76, Convert.ToDouble(position.AveragePrice), 0.01);
+        //     Assert.AreEqual(260.76, Convert.ToDouble(position.AveragePrice), 0.01);
 
-             operations = new List<Operation>
-             {
-                 CreateOperation(instrument, 260.5M, +20),
-             };
+        //     operations = new List<Operation>
+        //     {
+        //         CreateOperation(instrument, 260.5M, +20),
+        //     };
 
-             PositionsManager.ProcessOperations(position, operations);
+        //     PositionsManager.ProcessOperations(position, operations);
 
-             Assert.AreEqual(261.27, Convert.ToDouble(position.AveragePrice), 0.01);
-        }
+        //     Assert.AreEqual(261.27, Convert.ToDouble(position.AveragePrice), 0.01);
+        //}
 
         [TestMethod]
         public void Test6_PositionsProcess_FixedLoss()
