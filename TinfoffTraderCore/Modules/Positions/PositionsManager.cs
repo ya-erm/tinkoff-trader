@@ -68,7 +68,14 @@ namespace TinkoffTraderCore.Modules.Positions
         {
             var instrument = await _instrumentsManager.GetInstrumentByTickerAsync(ticker);
 
-            return await CalculatePositionAsync(instrument.Figi);
+            if (instrument == null)
+            {
+                Log.Error($"Не удалось найти инструмент по названию: {ticker}");
+
+                return null;
+            }
+
+            return await CalculatePositionAsync(instrument?.Figi);
         }
 
         public async Task<Position> CalculatePositionAsync(string figi)
@@ -157,16 +164,21 @@ namespace TinkoffTraderCore.Modules.Positions
                     if (direction * currentQuantity < 0)
                     {
                         fixedPnL = direction * quantity * (averagePriceCorrected ?? 0) - costCorrected;
-                    }
 
-                    currentQuantity = nextQuantity;
-
-                    if (currentQuantity != 0)
-                    {
-                        averagePrice = Math.Abs(sumUp / currentQuantity);
-                        averagePriceCorrected = Math.Abs(sumUpCorrected / currentQuantity);
+                        currentQuantity = nextQuantity;
                     }
                     else
+                    {
+                        currentQuantity = nextQuantity;
+
+                        if (currentQuantity != 0)
+                        {
+                            averagePrice = Math.Abs(sumUp / currentQuantity);
+                            averagePriceCorrected = Math.Abs(sumUpCorrected / currentQuantity);
+                        }
+                    }
+
+                    if(currentQuantity == 0)
                     {
                         averagePrice = null;
                         averagePriceCorrected = null;
