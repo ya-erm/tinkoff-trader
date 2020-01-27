@@ -14,5 +14,12 @@ namespace TinkoffTraderCore.Modules.Instruments
         /// <param name="figi">Идентификатор инструмента</param>
         /// <returns></returns>
         Task<MarketInstrument> GetInstrumentAsync(string figi);
+
+        /// <summary>
+        /// Получить инструмент по его аббревиатуре
+        /// </summary>
+        /// <param name="ticker">Аббревиатура инструмента</param>
+        /// <returns></returns>
+        Task<MarketInstrument> GetInstrumentByTickerAsync(string ticker);
     }
 }

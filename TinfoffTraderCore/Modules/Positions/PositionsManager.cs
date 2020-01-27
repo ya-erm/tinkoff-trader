@@ -43,27 +43,16 @@ namespace TinkoffTraderCore.Modules.Positions
 
             foreach (var pos in portfolio.Positions)
             {
-                var instrument = await _instrumentsManager.GetInstrumentAsync(pos.Figi);
+                var position = await CalculatePositionAsync(pos.Figi);
 
-                if (instrument == null)
+                if (position == null)
                 {
-                    Log.Error($"Не удалось найти инструмент по идентификатору: {pos.Figi}");
-
                     continue;
                 }
 
-                var position = new Position(instrument, 0);
-
-                // TODO: не хардкодить дату
-                var startDate = new DateTime(2019, 1, 1);
-                var operations = await _context.OperationsAsync(startDate, DateTime.Now, position.Figi);
-                operations.Reverse();
-
-                ProcessOperations(position, operations);
-
                 if (position.LotsCount != pos.Lots)
                 {
-                    Log.Error($"Рассчитанная позиция {instrument.Ticker}: {position.LotsCount} шт., не совпадает с актуальной: {pos.Lots} шт.");
+                    Log.Error($"Рассчитанная позиция {position.Instrument.Ticker}: {position.LotsCount} шт., не совпадает с актуальной: {pos.Lots} шт.");
                 }
 
                 // TODO: Сохранить позицию в БД
@@ -74,7 +63,49 @@ namespace TinkoffTraderCore.Modules.Positions
 
         #endregion
 
-        /// <summary>
+
+        public async Task<Position> CalculatePositionByTickerAsync(string ticker)
+        {
+            var instrument = await _instrumentsManager.GetInstrumentByTickerAsync(ticker);
+
+            if (instrument == null)
+            {
+                Log.Error($"Не удалось найти инструмент по названию: {ticker}");
+
+                return null;
+            }
+
+            return await CalculatePositionAsync(instrument?.Figi);
+        }
+
+        public async Task<Position> CalculatePositionAsync(string figi)
+        {
+            var instrument = await _instrumentsManager.GetInstrumentAsync(figi);
+
+            if (instrument == null)
+            {
+                Log.Error($"Не удалось найти инструмент по идентификатору: {figi}");
+
+                return null;
+            }
+
+            var position = new Position(instrument, 0);
+
+            // TODO: не хардкодить дату
+            var startDate = new DateTime(2019, 1, 1);
+            var operations = await _context.OperationsAsync(startDate, DateTime.Now, position.Figi);
+            operations.Reverse();
+
+            ProcessOperations(position, operations);
+
+            var currency = position.Instrument.Currency == Currency.Rub ? "₽" : "$";
+
+            Log.Info($"Рассчитанная прибыль c {position.Instrument.Ticker}: {position.FixedPnL:F2} {currency}, позиция: {position.Quantity} шт.");
+
+            return position;
+        }
+
+            /// <summary>
         /// Рассчитать позицию на основе новых сделок
         /// </summary>
         /// <param name="position">Позиция с её текущим состоянием</param>
@@ -98,16 +129,16 @@ namespace TinkoffTraderCore.Modules.Positions
                 if (operation.Status != OperationStatus.Done) continue;
 
                 var price = operation.Price;
-                var payment = operation.Payment;
+                var cost = -operation.Payment;
                 var quantity = operation.Trades.Aggregate(0, (res, trade) => res + trade.Quantity);
-                var commission = operation.Commission?.Value ?? 0;
+                var commission = Math.Abs(operation.Commission?.Value ?? 0);
                 var direction = operation.OperationType == ExtendedOperationType.Buy || 
                                 operation.OperationType == ExtendedOperationType.BuyCard ? +1 : -1;
 
-                var paymentCorrected = payment + commission;
+                var costCorrected = cost + commission;
 
-                var sumUp = (currentQuantity * (averagePrice ?? 0)) + payment;
-                var sumUpCorrected = (currentQuantity * (averagePriceCorrected ?? 0)) + paymentCorrected;
+                var sumUp = currentQuantity * (averagePrice ?? 0) + cost;
+                var sumUpCorrected = currentQuantity * (averagePriceCorrected ?? 0) + costCorrected;
 
                 var nextQuantity = currentQuantity + direction * quantity;
 
@@ -117,13 +148,14 @@ namespace TinkoffTraderCore.Modules.Positions
                 if (nextQuantity < 0 && currentQuantity > 0 ||
                     nextQuantity > 0 && currentQuantity < 0)
                 {
-                    var partialPayment = currentQuantity * payment / quantity;
-                    var partialPaymentCorrected = currentQuantity * paymentCorrected / quantity;
+                    var proportion = Math.Abs(currentQuantity / (decimal)quantity);
 
-                    fixedPnL = Math.Sign(currentQuantity) * ( -direction * currentQuantity * (averagePriceCorrected ?? 0) + partialPaymentCorrected);
+                    var partialCostCorrected = costCorrected * proportion;
 
-                    averagePrice = (payment - partialPayment) / (quantity - currentQuantity);
-                    averagePriceCorrected = (paymentCorrected - partialPaymentCorrected) / (quantity - currentQuantity);
+                    fixedPnL = Math.Sign(currentQuantity) * direction * (currentQuantity * (averagePriceCorrected ?? 0) + partialCostCorrected);
+
+                    averagePrice = price;
+                    averagePriceCorrected = price - commission * (1 - proportion);
 
                     currentQuantity = nextQuantity;
                 }
@@ -131,17 +163,22 @@ namespace TinkoffTraderCore.Modules.Positions
                 {
                     if (direction * currentQuantity < 0)
                     {
-                        fixedPnL = -direction * quantity * (averagePriceCorrected ?? 0) + paymentCorrected;
-                    }
+                        fixedPnL = direction * quantity * (averagePriceCorrected ?? 0) - costCorrected;
 
-                    currentQuantity = nextQuantity;
-
-                    if (currentQuantity != 0)
-                    {
-                        averagePrice = sumUp / currentQuantity;
-                        averagePriceCorrected = sumUpCorrected / currentQuantity;
+                        currentQuantity = nextQuantity;
                     }
                     else
+                    {
+                        currentQuantity = nextQuantity;
+
+                        if (currentQuantity != 0)
+                        {
+                            averagePrice = Math.Abs(sumUp / currentQuantity);
+                            averagePriceCorrected = Math.Abs(sumUpCorrected / currentQuantity);
+                        }
+                    }
+
+                    if(currentQuantity == 0)
                     {
                         averagePrice = null;
                         averagePriceCorrected = null;
@@ -150,7 +187,25 @@ namespace TinkoffTraderCore.Modules.Positions
 
                 totalFixedPnL += (fixedPnL ?? 0);
 
-                var message = $"{position.Instrument.Ticker};\t{direction};\t{quantity};\t{price:F2};\t{currentQuantity};\t{sumUp:F2};\t{averagePrice:F2};\t{sumUpCorrected:F2};\t{averagePriceCorrected:F2};\t{fixedPnL:f2}";
+                var positionFill = new PositionFill()
+                {
+                    Figi = position.Instrument?.Figi,
+                    Date = operation.Date,
+                    Price = price,
+                    Count = direction * quantity,
+                    Commission = operation.Commission?.Value ?? 0,
+                    CurrentCount = currentQuantity,
+                    SumUp = sumUp,
+                    AveragePrice = averagePrice,
+                    SumUpCorrected = sumUpCorrected,
+                    AveragePriceCorrected = averagePriceCorrected,
+                    FixedPnL = fixedPnL,
+                };
+
+                position.Fills.Add(positionFill);
+
+                var plus = direction > 0 ? "+" : "";
+                var message = $"{position.Instrument?.Ticker};\t{operation.Date:G};\t{price:F2};\t{plus}{direction*quantity};\t{plus}{cost:F2};\t{currentQuantity};\t{sumUp:F2};\t{averagePrice:F2};\t{sumUpCorrected:F2};\t{averagePriceCorrected:F2};\t{fixedPnL:f2}";
                 
                 Log.Debug(message);
             }
@@ -159,6 +214,7 @@ namespace TinkoffTraderCore.Modules.Positions
             position.AveragePrice = averagePrice;
             position.AveragePriceCorrected = averagePriceCorrected;
             position.FixedPnL = totalFixedPnL;
+            position.LastUpdateTime = operations.LastOrDefault()?.Date ?? DateTime.Now;
         }
     }
 }

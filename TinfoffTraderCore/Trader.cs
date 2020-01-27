@@ -3,21 +3,42 @@ using System.Threading.Tasks;
 using Tinkoff.Trading.OpenApi.Network;
 using TinkoffTraderCore.Modules.Instruments;
 using TinkoffTraderCore.Modules.Positions;
+using TinkoffTraderCore.Storage;
 using TinkoffTraderCore.Utils;
 
 namespace TinkoffTraderCore
 {
     public class Trader
     {
-        private readonly string _token;
-        private readonly bool _useSandbox;
+        private string _token;
+        private bool _useSandbox;
+
+        public InstrumentsManager InstrumentsManager { get; private set; }
+
+        public PositionsManager PositionsManager { get; private set; }
+
+        public ApplicationDbContext DbContext { get; private set; }
 
         #region .ctor
 
-        public Trader(string token, bool useSandbox)
+        public Trader()
+        {
+            DbContext  = new ApplicationDbContext();
+        }
+
+        public void Initialize(string token, bool useSandbox)
         {
             _token = token;
             _useSandbox = useSandbox;
+
+            var context = _useSandbox
+                ? ConnectionFactory.GetSandboxConnection(_token).Context
+                : ConnectionFactory.GetConnection(_token).Context;
+
+            PositionsManager = new PositionsManager(context, InstrumentsManager);
+            InstrumentsManager = new InstrumentsManager(context, DbContext);
+
+            PositionsManager = new PositionsManager(context, DbContext, InstrumentsManager);
         }
 
         #endregion
@@ -26,20 +47,14 @@ namespace TinkoffTraderCore
         {
             try
             {
-                var context = _useSandbox
-                    ? ConnectionFactory.GetSandboxConnection(_token).Context
-                    : ConnectionFactory.GetConnection(_token).Context;
-
-                var instrumentsManager = new InstrumentsManager(context);
-                await instrumentsManager.InitializeAsync();
-
-                var positionsManager = new PositionsManager(context, instrumentsManager);
-                await positionsManager.LoadPositionsAsync();
+                await InstrumentsManager.InitializeAsync();
+                await PositionsManager.LoadPositionsAsync();
             }
             catch (Exception exception)
             {
-                
+                Console.WriteLine($"{exception.Message}\n{exception.StackTrace}");
             }
         }
+
     }
 }

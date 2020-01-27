@@ -15,5 +15,6 @@ namespace Tinkoff.Trading.OpenApi.Models
         TaxDividend,
         Dividend,
         BuyCard,
+        Coupon,
     }
 }

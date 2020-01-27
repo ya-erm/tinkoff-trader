@@ -7,6 +7,7 @@
              xmlns:viewModels="clr-namespace:TinkoffTrader.ViewModels"
              xmlns:converters="clr-namespace:TinkoffTrader.Converters"
              d:DataContext="{d:DesignInstance Type=viewModels:LoginViewModel}"
+             KeyDown="LoginComponent_OnKeyDown"
              d:DesignWidth="300"
              mc:Ignorable="d">
     <UserControl.Resources>
@@ -15,6 +16,9 @@
             <Setter Property="Margin" Value="0 0 0 5"/>
         </Style>
     </UserControl.Resources>
+    <UserControl.InputBindings>
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding Command}" />
+    </UserControl.InputBindings>
     <Grid Margin="5 5 5 0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
