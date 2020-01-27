@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TinkoffTraderCore.Models
 {
@@ -8,6 +10,12 @@ namespace TinkoffTraderCore.Models
     public class Fill
     {
         /// <summary>
+        /// Идентификатор сделки
+        /// </summary>
+        [Key]
+        public string Id { get; set; }
+
+        /// <summary>
         /// Дата и время совершения сделки
         /// </summary>
         public DateTime Date { get; set; }
@@ -15,6 +23,7 @@ namespace TinkoffTraderCore.Models
         /// <summary>
         /// Идентификатор инструмента
         /// </summary>
+        [ForeignKey(nameof(Instrument))]
         public string Figi { get; set; }
 
         /// <summary>
@@ -45,6 +54,11 @@ namespace TinkoffTraderCore.Models
         /// Комиссия
         /// </summary>
         public decimal Commission { get; set; }
+
+        /// <summary>
+        /// Связанный инструмент торговли
+        /// </summary>
+        public Instrument Instrument { get; set; }
     }
 
     public enum FillDirection

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Tinkoff.Trading.OpenApi.Network;
 using TinkoffTraderCore.Modules.Instruments;
 using TinkoffTraderCore.Modules.Positions;
+using TinkoffTraderCore.Storage;
 using TinkoffTraderCore.Utils;
 
 namespace TinkoffTraderCore
@@ -16,11 +17,13 @@ namespace TinkoffTraderCore
 
         public PositionsManager PositionsManager { get; private set; }
 
+        public ApplicationDbContext DbContext { get; private set; }
+
         #region .ctor
 
         public Trader()
         {
-
+            DbContext  = new ApplicationDbContext();
         }
 
         public void Initialize(string token, bool useSandbox)
@@ -31,10 +34,11 @@ namespace TinkoffTraderCore
             var context = _useSandbox
                 ? ConnectionFactory.GetSandboxConnection(_token).Context
                 : ConnectionFactory.GetConnection(_token).Context;
-            
-            InstrumentsManager = new InstrumentsManager(context);
 
             PositionsManager = new PositionsManager(context, InstrumentsManager);
+            InstrumentsManager = new InstrumentsManager(context, DbContext);
+
+            PositionsManager = new PositionsManager(context, DbContext, InstrumentsManager);
         }
 
         #endregion
